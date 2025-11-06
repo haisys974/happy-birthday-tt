@@ -14,6 +14,7 @@ const photos = [
 let currentPhotoIndex = 0;
 let currentThumbScroll = 0;
 let photoAutoSlideInterval;
+let musicInitialized = false;
 
 // Initialize particles
 function initParticles() {
@@ -247,30 +248,62 @@ function createHeart() {
 
 // Initialize background music
 function initBackgroundMusic() {
+    if (musicInitialized) return;
+    musicInitialized = true;
+
     const bgMusic = document.getElementById('bgMusic');
     const playButton = document.getElementById('playMusic');
     
-    if (bgMusic && playButton) {
-        bgMusic.volume = 0.5;
-        
-        // Try to play automatically first
-        bgMusic.play().then(() => {
-            console.log("Music started automatically");
-        }).catch(error => {
-            console.log("Autoplay prevented, waiting for user interaction");
-        });
+    if (!bgMusic || !playButton) return;
 
-        // Add click handler for the play button
-        playButton.addEventListener('click', () => {
-            if (bgMusic.paused) {
-                bgMusic.play();
-                playButton.textContent = '🔊';
-            } else {
-                bgMusic.pause();
-                playButton.textContent = '🔇';
-            }
+    // Thiết lập âm lượng
+    bgMusic.volume = 0.5;
+    
+    // Hàm phát nhạc
+    const playMusic = () => {
+        bgMusic.play().then(() => {
+            playButton.textContent = '🔊';
+        }).catch(() => {
+            playButton.textContent = '🔇';
         });
+    };
+
+    // Hàm dừng nhạc
+    const pauseMusic = () => {
+        bgMusic.pause();
+        playButton.textContent = '🔇';
+    };
+
+    // Xử lý lỗi file nhạc
+    bgMusic.addEventListener('error', () => {
+        playButton.textContent = '❌';
+        playButton.style.backgroundColor = '#ff6b6b';
+    });
+
+    // Xử lý click nút phát nhạc
+    playButton.addEventListener('click', () => {
+        if (bgMusic.paused) {
+            playMusic();
+        } else {
+            pauseMusic();
+        }
+    });
+
+    // Tự động phát nhạc
+    const attemptAutoPlay = () => {
+        playMusic();
+        document.removeEventListener('click', attemptAutoPlay);
+    };
+
+    // Thử phát nhạc khi trang web tải xong
+    if (bgMusic.readyState >= 2) {
+        playMusic();
+    } else {
+        bgMusic.addEventListener('canplaythrough', playMusic);
     }
+
+    // Thêm xử lý click cho toàn trang
+    document.addEventListener('click', attemptAutoPlay);
 }
 
 // Initialize on load
@@ -289,8 +322,6 @@ window.addEventListener('load', () => {
     if (prevBtn && nextBtn) {
         prevBtn.addEventListener('click', () => scrollThumbs(-1));
         nextBtn.addEventListener('click', () => scrollThumbs(1));
-        
-        // Update thumbnail nav visibility initially
         updateThumbNav();
     }
     
@@ -301,12 +332,14 @@ window.addEventListener('load', () => {
         }
     }, 1500);
     
-    // Add fade transition to main photo
+    // Add transitions
     const mainPhoto = document.getElementById('mainPhoto');
-    mainPhoto.style.transition = 'opacity 0.3s ease';
-    
-    // Ensure thumbs container has smooth transition
     const thumbsContainer = document.getElementById('thumbsContainer');
+    
+    if (mainPhoto) {
+        mainPhoto.style.transition = 'opacity 0.3s ease';
+    }
+    
     if (thumbsContainer) {
         thumbsContainer.style.transition = 'transform 0.3s ease';
     }
@@ -361,4 +394,3 @@ window.addEventListener('beforeunload', () => {
     stopPhotoAutoSlide();
     document.querySelectorAll('.confetti, .heart').forEach(el => el.remove());
 });
-
