@@ -245,14 +245,54 @@ function createHeart() {
     }, 3000);
 }
 
+// Initialize background music
+function initBackgroundMusic() {
+    const bgMusic = document.getElementById('bgMusic');
+    const playButton = document.getElementById('playMusic');
+    
+    if (bgMusic && playButton) {
+        bgMusic.volume = 0.5;
+        
+        // Try to play automatically first
+        bgMusic.play().then(() => {
+            console.log("Music started automatically");
+        }).catch(error => {
+            console.log("Autoplay prevented, waiting for user interaction");
+        });
+
+        // Add click handler for the play button
+        playButton.addEventListener('click', () => {
+            if (bgMusic.paused) {
+                bgMusic.play();
+                playButton.textContent = '🔊';
+            } else {
+                bgMusic.pause();
+                playButton.textContent = '🔇';
+            }
+        });
+    }
+}
+
 // Initialize on load
 window.addEventListener('load', () => {
+    initBackgroundMusic();
     initParticles();
     generateThumbnails();
     startPhotoAutoSlide();
     
     // Set first photo
     document.getElementById('mainPhoto').src = photos[0];
+    
+    // Setup thumbnail navigation
+    const prevBtn = document.getElementById('thumbPrev');
+    const nextBtn = document.getElementById('thumbNext');
+    if (prevBtn && nextBtn) {
+        prevBtn.addEventListener('click', () => scrollThumbs(-1));
+        nextBtn.addEventListener('click', () => scrollThumbs(1));
+        
+        // Update thumbnail nav visibility initially
+        updateThumbNav();
+    }
     
     // Initial confetti
     setTimeout(() => {
@@ -264,6 +304,12 @@ window.addEventListener('load', () => {
     // Add fade transition to main photo
     const mainPhoto = document.getElementById('mainPhoto');
     mainPhoto.style.transition = 'opacity 0.3s ease';
+    
+    // Ensure thumbs container has smooth transition
+    const thumbsContainer = document.getElementById('thumbsContainer');
+    if (thumbsContainer) {
+        thumbsContainer.style.transition = 'transform 0.3s ease';
+    }
 });
 
 // Sparkle effects on mouse move
@@ -316,43 +362,3 @@ window.addEventListener('beforeunload', () => {
     document.querySelectorAll('.confetti, .heart').forEach(el => el.remove());
 });
 
-// ...existing code...
-// Initialize on load
-window.addEventListener('load', () => {
-    initParticles();
-    generateThumbnails();
-    startPhotoAutoSlide();
-    
-    // Set first photo
-    document.getElementById('mainPhoto').src = photos[0];
-    
-    // Ensure thumbs container has smooth transition and initial transform
-    const thumbsContainer = document.getElementById('thumbsContainer');
-    if (thumbsContainer) {
-        thumbsContainer.style.transition = 'transform 0.32s ease';
-        thumbsContainer.style.transform = 'translateX(0)';
-    }
-
-    // Hook up prev/next thumbnail buttons
-    const prevBtn = document.getElementById('thumbPrev');
-    const nextBtn = document.getElementById('thumbNext');
-    if (prevBtn && nextBtn) {
-        prevBtn.addEventListener('click', () => scrollThumbs(-1));
-        nextBtn.addEventListener('click', () => scrollThumbs(1));
-    }
-
-    // Update thumbnail nav on resize (keeps buttons visibility correct)
-    window.addEventListener('resize', updateThumbNav);
-    
-    // Initial confetti
-    setTimeout(() => {
-        for (let i = 0; i < 30; i++) {
-            setTimeout(() => createConfetti(), i * 50);
-        }
-    }, 1500);
-    
-    // Add fade transition to main photo
-    const mainPhoto = document.getElementById('mainPhoto');
-    mainPhoto.style.transition = 'opacity 0.3s ease';
-});
-// ...existing code...
